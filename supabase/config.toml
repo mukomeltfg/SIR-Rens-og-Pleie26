@@ -1,0 +1,2 @@
+[functions.send-review-sms]
+verify_jwt = true
