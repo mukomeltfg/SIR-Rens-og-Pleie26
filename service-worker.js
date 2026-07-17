@@ -1,5 +1,12 @@
-const CACHE='sir-premium-v4';
-const ASSETS=['./','./index.html','./style.css','./script.js','./config.js','./manifest.webmanifest'];
-self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS))));
-self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k))))));
-self.addEventListener('fetch',e=>{if(e.request.method!=='GET')return;e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request).then(res=>{const copy=res.clone();caches.open(CACHE).then(c=>c.put(e.request,copy));return res}).catch(()=>caches.match('./index.html'))))});
+self.addEventListener("install", event => {
+  self.skipWaiting();
+});
+self.addEventListener("activate", event => {
+  event.waitUntil((async () => {
+    const keys = await caches.keys();
+    await Promise.all(keys.map(key => caches.delete(key)));
+    await self.registration.unregister();
+    const clients = await self.clients.matchAll({ type: "window" });
+    for (const client of clients) client.navigate(client.url);
+  })());
+});

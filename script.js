@@ -7,7 +7,7 @@ ru:{navServices:"Услуги",navGallery:"Галерея",navCalculator:"Кал
 let lang=localStorage.getItem("sirLang")||"no";
 function t(k){return translations[lang][k]||translations.no[k]||k}function applyLang(){document.documentElement.lang=lang;$("#languageSelect").value=lang;$$('[data-i18n]').forEach(el=>{el.textContent=t(el.dataset.i18n)});$$('[data-i18n-placeholder]').forEach(el=>el.placeholder=t(el.dataset.i18nPlaceholder));updateObjectLabel();calc();renderReviews();renderOrders()}
 $("#languageSelect").addEventListener("change",e=>{lang=e.target.value;localStorage.setItem("sirLang",lang);applyLang()});
-window.addEventListener("load",()=>{setTimeout(()=>$("#loader")?.classList.add("hidden"),250);applyLang();if("serviceWorker"in navigator)navigator.serviceWorker.register("service-worker.js").catch(()=>{})});
+window.addEventListener("load",()=>{setTimeout(()=>$("#loader")?.classList.add("hidden"),250);applyLang();if("serviceWorker"in navigator){navigator.serviceWorker.getRegistrations().then(rs=>rs.forEach(r=>r.unregister()));caches?.keys?.().then(ks=>ks.forEach(k=>caches.delete(k)))}});
 const observer=new IntersectionObserver(es=>es.forEach(e=>e.isIntersecting&&e.target.classList.add("visible")),{threshold:.12});$$('.reveal').forEach(x=>observer.observe(x));
 $("#menuToggle").onclick=()=>{$("#navPanel").classList.toggle("open");$("#menuToggle").setAttribute("aria-expanded",$("#navPanel").classList.contains("open"))};$$('#navPanel a').forEach(a=>a.onclick=()=>$("#navPanel").classList.remove("open"));
 function openModal(id){$("#"+id).classList.add("open");document.body.classList.add("modal-open")}function closeModal(id){$("#"+id).classList.remove("open");document.body.classList.remove("modal-open")}$$('[data-close]').forEach(b=>b.onclick=()=>closeModal(b.dataset.close));$$('.modal').forEach(m=>m.onclick=e=>{if(e.target===m)closeModal(m.id)});document.addEventListener("keydown",e=>{if(e.key==="Escape")$$('.modal.open').forEach(m=>closeModal(m.id))});
@@ -32,7 +32,13 @@ const statusLabels={
 function statusText(status,message=''){return message||statusLabels[lang]?.[status]||statusLabels.no[status]||status}
 const cfg=window.SIR_CONFIG||{};
 const supabaseReady=cfg.supabaseUrl&&!cfg.supabaseUrl.startsWith('PASTE_')&&cfg.supabaseAnonKey&&!cfg.supabaseAnonKey.startsWith('PASTE_');
-const db=supabaseReady?window.supabase.createClient(cfg.supabaseUrl,cfg.supabaseAnonKey):null;
+let db=null;
+try{
+  db=supabaseReady?window.supabase.createClient(cfg.supabaseUrl.trim(),cfg.supabaseAnonKey.trim()):null;
+}catch(error){
+  console.error("Supabase configuration error",error);
+  db=null;
+}
 loadPublicSiteSettings();
 
 async function loadPublicSiteSettings(){
