@@ -1,3 +1,0 @@
-User-agent: *
-Allow: /
-Sitemap: https://mukomeltfg.github.io/SIR-RensPleie/sitemap.xml
